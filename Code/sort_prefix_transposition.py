@@ -1,10 +1,10 @@
 import math
 import random
 import commands
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import sys
 from collections import OrderedDict
-from graphviz import Digraph
+#from graphviz import Digraph
 
 def show_stat(D):
     maxi = math.factorial(D[1])
@@ -26,18 +26,22 @@ def show_stat(D):
     ax.set_ylim([0, 100])
     plt.show()
 
-def show_permutation_proportion(n):
+def show_proportion(n,func):
     maxi = math.factorial(n)
-    dict_show = calcul_permutation_proportion()
+    dict_show = func(n)
 
     print(dict_show)
-    for items in dict_show.keys():
-        dict_show[items]=round(float(dict_show[items])/float(maxi)*100.0,2)
+    '''for items in dict_show.keys():
+        dict_show[items]=round(float(dict_show[items])/float(maxi)*100.0,2)'''
     plt.plot(dict_show.keys(), dict_show.values())
-    ax = plt.gca()
+    '''ax = plt.gca()
     ax.set_yticklabels(['0%', '20%', '40%', '60%', '80%', '100%'])
-    ax.set_ylim([0, 100])
+    ax.set_ylim([0, 100])'''
     plt.show()
+
+
+
+
 
 def show_graph_1(matrice,perm):
     const=0
@@ -113,12 +117,40 @@ def calcul_permutation_proportion(n):
             dict_show[i[0]]+=1
     return dict_show
 
+def calcul_optimal_chemin_proportion(n):
+    dict_show = {}
+    dict = all_distance_prefix(n)
+    for i in dict.values():
+        if not dict_show.has_key(i[2]):
+            dict_show[i[2]] = 1
+        else:
+            dict_show[i[2]] += 1
+    return dict_show
+
+
+
+def all_distance_prefix(n):
+    dic={}
+    perm = [i + 1 for i in range(n)]
+    dic[tuple(perm)] = [0, 1, 1]
+    obj = math.factorial(n)
+    distance = 1
+    while len(dic) < obj:
+        for perm, value in dic.items():
+            if value[0] == distance - 1:
+                all_transpositions_prefix(list(perm), dic, distance)
+        distance += 1
+    return dic
+
 def all_transpositions_prefix(perm, dic, distance):
     for y in range(2, len(perm) + 1):
         for x in range(1, y):
             sol = transposition_prefix(perm,x,y)
             if not dic.has_key(tuple(sol)):
-                dic[tuple(sol)] = (distance, bp(sol))
+                dic[tuple(sol)] = [distance, bp(sol),dic[tuple(perm)][2]]
+            elif dic[tuple(sol)][0] == distance:
+                dic[tuple(sol)][2]+=dic[tuple(perm)][2]
+
 
 def transposition_prefix(perm,x,y):
     sol = perm[x:y]
@@ -197,6 +229,46 @@ def nb_cycle_of_size(perm,n):
             sol+=1
     return sol
 
+def permutation_to_map(perm):
+    perm.insert(0,0)
+    perm.append(len(perm))
+    print(perm)
+    map = []
+    not_free=[]
+
+    for i in range(len(perm)-1):
+        cycle = []
+        if perm[i] not in not_free:
+            cycle.append(perm[i])
+            j=perm[perm[perm[i]+1]-1]
+
+            while j not in cycle:
+                cycle.append(j)
+                not_free.append(j)
+                j=perm[perm[j+1]-1]
+            map.append(cycle)
+    return map
+
+
+def map_to_permutation(map):
+    size=0
+    for c in map:
+        size+=len(c)
+    tab=[0]*(size+1)
+    print tab
+    for c in map:
+        for i in range(len(c)):
+            tab[(c[i]+1)%len(tab)]=c[(i+1)%len(c)]
+    res=[]
+    i=len(tab)-1
+    while i != 0:
+        i=tab[i]
+        res.insert(0,i)
+
+    res.pop(0)
+    return res
+
+
 def print_matrice(matrice):
     for line in matrice: print(line)
 
@@ -264,16 +336,19 @@ def algo_sort_reverse(perm):
         nb_perm+=1
     n=n-n%4
 
-    #print("Phase 0 : "+str(perm))
+    print("Phase 0 : "+str(perm))
 
     #Phase 1
 
     for i in range(0,n/4-1):
         perm = transposition_prefix(perm,4,n-2*i-1)
         nb_perm+=1
+    print("Phase 1.1 : " + str(perm))
+
     perm = transposition_prefix(perm,2,n/2+1)
     nb_perm+=1
-    #print("Phase 1 : " + str(perm))
+
+    print("Phase 1.2 : " + str(perm))
 
     #Phase 2
 
@@ -281,13 +356,16 @@ def algo_sort_reverse(perm):
         perm = transposition_prefix(perm,2,n-4*i)
         nb_perm+=1
 
-    #print("Phase 2 : " + str(perm))
+    print("Phase 2 : " + str(perm))
 
     #Phase 3
 
     for i in range(0,n/8):
         perm = transposition_prefix(perm,n-5-4*i,n-4*i-1)
         nb_perm+=1
+
+    print("Phase 3.1 : " + str(perm))
+
     if n%8 == 0 :
         perm = transposition_prefix(perm,2,n/2+1)
         nb_perm+=1
@@ -296,7 +374,7 @@ def algo_sort_reverse(perm):
         nb_perm+=1
 
 
-    #print("Phase 3 : " + str(perm))
+    print("Phase 3.2 : " + str(perm))
 
     #Phase 4
 
@@ -550,18 +628,44 @@ def algo_sort_prefix_v5(perm):
 
     return nb_transposition
 
-def all_distance_prefix(n):
-    dic={}
-    perm = [i + 1 for i in range(n)]
-    dic[tuple(perm)] = (0, 1)
-    obj = math.factorial(n)
-    distance = 1
-    while len(dic) < obj:
-        for perm, value in dic.items():
-            if value[0] == distance - 1:
-                all_transpositions_prefix(list(perm), dic, distance)
-        distance += 1
-    return dic
+def algo_sort_prefix_v6(perm):
+    nb_transposition = 0
+    print(perm)
+    tab = [[0 for j in range(3)] for i in range(len(perm))]
+    tab_coord =[() for i in range(len(perm))]
+    print(tab)
+    while(bp(perm)!=1):
+        done = False
+        for i in range(0,len(perm)-1):
+            if(perm[i]+1==perm[i+1]):
+                print(i)
+                tab[i]=[-1,-1,0]
+            elif(perm[0]==perm[i]+1):
+                for j in range(i):
+                    if((i == len(perm)-1 and perm[j]+1 ==len(perm)) or(perm[j]+1 == perm[i+1])):
+                        tab[i][1]=2
+                        tab_coord[i]=(i,j)
+                        done = True
+                if not done:
+                    for j in range(i):
+                        if(perm[j]+1 != perm[j+1]):
+                            tab[i][1]=1
+                            if(perm[j+1]==1):
+                                tab[i][2]-=1
+                            if(perm[j+1] < perm[j]):
+                                tab[i][0]=-1
+                            tab_coord[i] = (i, j)
+                            break
+
+
+        if(perm[-1]==len(perm)):
+            tab[-1] = [-1, -1, 0]
+
+        print(tab)
+
+
+    return nb_transposition
+
 
 '''def distance_backtracking(perm):
     return distance_backtracking_aux(perm,[],0,False,{})
@@ -602,6 +706,7 @@ def distance_backtracking_aux(perm,pile,distance,find,dict):
     dict[str(perm)]=minimum
     return minimum
 '''
+
 def distance_backtracking(perm):
     return distance_backtracking_aux(perm,[],0)
 
@@ -675,8 +780,7 @@ Permutation devant faire des transposition ne cassant pas de bp pour etre opt:
 (3, 2, 1, 7, 6, 5, 4) : dp(5) , bp(8); distance_backtracking : dp(6); efficacite : 83.33%
 
 [[3, 2, 5, 4, 1, 7, 6], [4, 1, 7, 3, 2, 5, 6], [7, 3, 4, 1, 2, 5, 6], [3, 4, 1, 2, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7]]
-'''
-'''
+
 Memo:
 
 (5, 3, 2, 4, 1) : dp(3) , bp(6); algo_sort_prefix_v5 : dp(4); efficacite : 75.0%
@@ -688,12 +792,8 @@ Memo:
 (4, 3, 2, 5, 1) : dp(3) , bp(6); algo_sort_prefix_v5 : dp(4); efficacite : 75.0%
 (4, 2, 5, 3, 1) : dp(3) , bp(6); algo_sort_prefix_v5 : dp(4); efficacite : 75.0%
 
-
 print_dic(all_distance_prefix(5),algo_sort_prefix_v5,99.9)
-
 '''
 
-perm=permutation_random_generateur(7)
-print(perm)
-
-show_graph_2(breakpoint_graph(perm),perm)
+perm=[1,3,2,4,6,5]
+map_to_permutation(permutation_to_map(perm))
