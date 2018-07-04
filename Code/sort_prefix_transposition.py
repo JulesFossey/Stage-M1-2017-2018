@@ -232,7 +232,6 @@ def nb_cycle_of_size(perm,n):
 def permutation_to_map(perm):
     perm.insert(0,0)
     perm.append(len(perm))
-    print(perm)
     map = []
     not_free=[]
 
@@ -240,12 +239,14 @@ def permutation_to_map(perm):
         cycle = []
         if perm[i] not in not_free:
             cycle.append(perm[i])
-            j=perm[perm[perm[i]+1]-1]
+            not_free.append(perm[i])
 
+            j=perm[perm.index(perm[i]+1)-1]
             while j not in cycle:
                 cycle.append(j)
                 not_free.append(j)
-                j=perm[perm[j+1]-1]
+                j = perm[perm.index(perm[perm.index(j)] + 1) - 1]
+
             map.append(cycle)
     return map
 
@@ -267,6 +268,13 @@ def map_to_permutation(map):
 
     res.pop(0)
     return res
+
+def inverse_permutation(perm):
+    res=[0]*len(perm)
+    for i in range(len(perm)):
+        res[perm[i]-1]=i+1
+    print(res)
+
 
 
 def print_matrice(matrice):
@@ -573,7 +581,7 @@ def algo_sort_prefix_v4(perm):
             maximum-=1
     return nb_transposition
 
-def is_double_inverse(perm):
+def is_double_reverse(perm):
 
     for i in range(len(perm)-1):
         if(perm[i]!=perm[i+1]+1 and perm[i]!=1):
@@ -589,7 +597,7 @@ def algo_sort_prefix_v5(perm):
     if(bp(perm)<=3):
         return bp(perm)/2
 
-    if(len(perm) >5 and is_double_inverse(perm)):
+    if(len(perm) >5 and is_double_reverse(perm)):
         #maxi=max(perm.index(1)+1,len(perm)-(perm.index(1)+1))
         perm = transposition_prefix(perm, 2,4)
         nb_transposition+=1
@@ -750,8 +758,18 @@ def longest_distance(n):
 def print_dic(dic,func,n):
     for perm, dist in dic.items():
         sol = func(list(perm))
-        if(sol != 0 and round(float(dist[0])/float(sol)*100.0) <=n):
+        if(sol != 0 and round(float(dist[0])/float(sol)*100.0) <=n ):
             print(str(perm)+" : dp("+str(dist[0])+") , bp("+str(dist[1])+"); "+str_func(func)+" : dp("+str(sol)+"); efficacite : "+str(round(float(dist[0])/float(sol)*100.0,2))+"%")
+
+def print_perm_with_n_cycle(dic,n,borne):
+    i=0
+    for perm, dist in dic.items():
+        size=len(perm)
+
+        if(len(permutation_to_map(list(perm)))==n and dist[0] == borne):
+            i+=1
+            print(str(perm)+" : dp("+str(dist[0])+") , bp("+str(dist[1])+"); : map("+str(permutation_to_map(list(perm)))+");")
+    print str(float(i)/float(math.factorial(size))*100.0)+"%"
 
 def str_func(func):
     name=str(func)
@@ -795,5 +813,7 @@ Memo:
 print_dic(all_distance_prefix(5),algo_sort_prefix_v5,99.9)
 '''
 
-perm=[1,3,2,4,6,5]
-map_to_permutation(permutation_to_map(perm))
+
+perm=[4,2,1,3]
+
+inverse_permutation(perm)
