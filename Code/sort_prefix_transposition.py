@@ -269,13 +269,39 @@ def map_to_permutation(map):
     res.pop(0)
     return res
 
+def reduction_permutation(perm):
+    list=[]
+    bande=[]
+    for i in range(len(perm)):
+        if(len(bande)==0):
+            bande.append(perm[i])
+        elif(bande[-1]+1!=perm[i]):
+            list.append(bande)
+            bande=[]
+            bande.append(perm[i])
+        else:
+            bande.append(perm[i])
+    list.append(bande)
+    print(list)
+    res=[]
+    for i in range(len(list)):
+        if(len(list[i])>1):
+            for j in range(len(list)):
+                if(list[j][0]>list[i][0]):
+                    for k in range(len(list[j])):
+                        list[j][k]-=1
+            for j in range(len(res)):
+                if(res[j]>list[i][0]):
+                    res[j]-=1
+        res.append(list[i][0])
+
+    print(res)
+
 def inverse_permutation(perm):
     res=[0]*len(perm)
     for i in range(len(perm)):
         res[perm[i]-1]=i+1
     print(res)
-
-
 
 def print_matrice(matrice):
     for line in matrice: print(line)
@@ -814,6 +840,7 @@ print_dic(all_distance_prefix(5),algo_sort_prefix_v5,99.9)
 '''
 
 
-perm=[4,2,1,3]
+perm=[1,3,4,7,5,6,2]
 
-inverse_permutation(perm)
+
+reduction_permutation(perm)
